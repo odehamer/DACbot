@@ -1,10 +1,12 @@
 from TikTokLive import TikTokLiveClient
 from TikTokLive.client.logger import LogLevel
 from TikTokLive.events import ConnectEvent, CommentEvent, GiftEvent
+from gtts import gTTS
 import time
-import subprocess
+import os
+import platform
 
-streamer_username = "pokebanktv" #change to desired streamer
+streamer_username = "sergioramoscr_" #change to desired streamer
 min_coins = 1 #minimum coins required to trigger TTS
 
 gifters = []
@@ -25,7 +27,21 @@ async def on_comment(event: CommentEvent):
     if username in gifters:
         comment_text = event.comment
         print(f"New comment by {event.user.nickname}: {comment_text}", flush=True)
-        subprocess.run(["say", comment_text])
+
+        # use gTTS to speak the comment
+        tts = gTTS(text=comment_text, lang='en', slow=False)
+        tts.save("temp_comment.mp3")
+        
+        # Cross-platform audio playback
+        if platform.system() == "Darwin":  # macOS
+            os.system("afplay -v 3 temp_comment.mp3")
+        elif platform.system() == "Windows":
+            os.system("powershell -c (New-Object Media.SoundPlayer 'temp_comment.mp3').PlaySync()")
+        else:  # Linux
+            os.system("ffplay -nodisp -autoexit temp_comment.mp3")
+        
+        os.remove("temp_comment.mp3")
+
         gifters.remove(username)
     elif "tts" in event.comment.lower() and (username == "odehamer" or username == streamer_username): #manual TTS trigger, chat "tts <username>" to add someone to TTS
         print(f"{event.comment.lower().strip('tts ').strip()} manually added to TTS", flush=True)
