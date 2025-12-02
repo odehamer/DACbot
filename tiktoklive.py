@@ -1,9 +1,11 @@
 from TikTokLive import TikTokLiveClient
 from TikTokLive.client.logger import LogLevel
 from TikTokLive.events import ConnectEvent, CommentEvent, GiftEvent
+import time
 import subprocess
 
-streamer_username = "kioyasme"
+streamer_username = "pokebanktv" #change to desired streamer
+min_coins = 1 #minimum coins required to trigger TTS
 
 gifters = []
 
@@ -25,22 +27,29 @@ async def on_comment(event: CommentEvent):
         print(f"New comment by {event.user.nickname}: {comment_text}", flush=True)
         subprocess.run(["say", comment_text])
         gifters.remove(username)
-    elif "tts" in event.comment.lower() and (username == "odehamer" or username == streamer_username):
-        print(f"{username} manually added to TTS", flush=True)
-        gifters.append(username)
+    elif "tts" in event.comment.lower() and (username == "odehamer" or username == streamer_username): #manual TTS trigger, chat "tts <username>" to add someone to TTS
+        print(f"{event.comment.lower().strip('tts ').strip()} manually added to TTS", flush=True)
+        gifters.append(event.comment.lower().strip("tts ").strip())
 
 
 @client.on(GiftEvent)
 async def on_gift(event: GiftEvent):
-    print(f"{event.user.nickname} added to TTS via gift", flush=True)
-    gifters.append(event.user.username)
+    print(event.gift.diamond_count)
+    if event.gift.diamond_count * 2 >= min_coins: # according to google 1 diamond = 2 coins   
+        print(f"{event.user.nickname} added to TTS via gift", flush=True)
+        gifters.append(event.user.username)
 
 client.add_listener(ConnectEvent, on_connect)
 client.add_listener(CommentEvent, on_comment)
 
 if __name__ == "__main__":
-    try:
-        client.run()
-    except Exception as e:
-        print(f"Error: {e}", flush=True)
-        print("User either does not exist, or you have made too many API calls. Try again in a few minutes", flush=True)
+    running = True
+
+    while running: #sometimes takes a few tries to connect
+        try:
+            client.run()
+            running = False
+        except Exception as e: 
+            print(f"Error: {e}", flush=True)
+            print("Trying to connect to client again in 10 seconds, make sure username is correct. This may take a few minutes", flush=True)
+            time.sleep(10)
