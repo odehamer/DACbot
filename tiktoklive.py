@@ -6,7 +6,7 @@ import time
 import os
 import platform
 
-streamer_username = "sergioramoscr_" #change to desired streamer
+streamer_username = "grizzcr" #change to desired streamer
 min_coins = 1 #minimum coins required to trigger TTS
 
 gifters = []
@@ -22,11 +22,11 @@ async def on_connect(event: ConnectEvent):
 
 @client.on(CommentEvent)
 async def on_comment(event: CommentEvent):
-    username = event.user.username
+    username = event.user_info.username
     print(f"Checking comment from {username}", flush=True)
     if username in gifters:
         comment_text = event.comment
-        print(f"New comment by {event.user.nickname}: {comment_text}", flush=True)
+        print(f"New comment by {event.user_info.nickname}: {comment_text}", flush=True)
 
         # use gTTS to speak the comment
         tts = gTTS(text=comment_text, lang='en', slow=False)
@@ -52,8 +52,8 @@ async def on_comment(event: CommentEvent):
 async def on_gift(event: GiftEvent):
     print(event.gift.diamond_count)
     if event.gift.diamond_count * 2 >= min_coins: # according to google 1 diamond = 2 coins   
-        print(f"{event.user.nickname} added to TTS via gift", flush=True)
-        gifters.append(event.user.username)
+        print(f"{event.user_info.nickname} added to TTS via gift", flush=True)
+        gifters.append(event.user_info.username)
 
 client.add_listener(ConnectEvent, on_connect)
 client.add_listener(CommentEvent, on_comment)
