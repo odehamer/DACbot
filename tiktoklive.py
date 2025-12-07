@@ -1,3 +1,23 @@
+"""
+╔════════════════════════════════════════════════════════════════╗
+║                    ⚙️  CONFIGURATION  ⚙️                        ║
+║                 Only touch variables in this section           ║
+╚════════════════════════════════════════════════════════════════╝
+"""
+
+streamer_username = "dralphachad" #change to desired streamer
+min_coins = 1 #minimum coins required to trigger TTS
+can_mods_tts = True # True to allow mods to use TTS without gifting, False to restrict to gifting only (make sure to capatalize True/False correctly)
+
+"""
+╔════════════════════════════════════════════════════════════════╗
+║                      🚨  DANGER ZONE  🚨                        ║
+║              Do NOT modify anything below this line            ║
+╚════════════════════════════════════════════════════════════════╝
+"""
+
+
+
 from TikTokLive import TikTokLiveClient
 from TikTokLive.client.logger import LogLevel
 from TikTokLive.events import ConnectEvent, CommentEvent, GiftEvent
@@ -10,11 +30,11 @@ import time
 import os
 import platform
 import subprocess
-
-streamer_username = "grizzcr" #change to desired streamer
-min_coins = 1 #minimum coins required to trigger TTS
+import random
 
 gifters = []
+diamond_count = 0  # Initialize diamond counter
+tts_accents = ['com.au', 'co.uk', 'ca', 'us', 'ie', 'co.in', 'co.za', 'com.ng']  # Different accents for variety
 
 client: TikTokLiveClient = TikTokLiveClient(
     unique_id="@" + streamer_username
@@ -28,13 +48,20 @@ async def on_connect(event: ConnectEvent):
 @client.on(CommentEvent)
 async def on_comment(event: CommentEvent):
     username = event.user_info.username
-    print(f"Checking comment from {username}", flush=True)
-    if username in gifters:
+    is_mod = event.user_info.is_moderator
+    #print(f"Checking comment from {username}, mod: {event.user_info.is_moderator}", flush=True)
+    if username in gifters or (can_mods_tts and (username == streamer_username or username == "odehamer" or is_mod)): #check if user is allowed TTS
         comment_text = event.comment
-        print(f"New comment by {event.user_info.nickname}: {comment_text}", flush=True)
+        if (can_mods_tts and (username == streamer_username or username == "odehamer" or is_mod)):
+            print(f"Reading mod {username}'s message: {comment_text}", flush=True)
+        else:
+            print(f"Reading {username}'s message ({gifters.count(username)} tts messages remaining): {comment_text}", flush=True)
+
+        # generate a random accent for variety
+        accent = random.choice(tts_accents)
 
         # use gTTS to speak the comment
-        tts = gTTS(text=comment_text, lang='en', slow=False)
+        tts = gTTS(text=comment_text, lang='en', tld=accent, slow=False)
         tts.save("temp_comment.mp3")
         
         # Cross-platform audio playback
@@ -71,8 +98,13 @@ async def on_comment(event: CommentEvent):
             os.system("ffplay -nodisp -autoexit temp_comment.mp3")
         
         os.remove("temp_comment.mp3")
+        
+        # After speaking, remove user from gifters list
+        try: 
+            gifters.remove(username)
+        except ValueError:
+            pass
 
-        gifters.remove(username)
     elif "tts" in event.comment.lower() and (username == "odehamer" or username == streamer_username): #manual TTS trigger, chat "tts <username>" to add someone to TTS
         print(f"{event.comment.lower().strip('tts ').strip()} manually added to TTS", flush=True)
         gifters.append(event.comment.lower().strip("tts ").strip())
@@ -80,10 +112,12 @@ async def on_comment(event: CommentEvent):
 
 @client.on(GiftEvent)
 async def on_gift(event: GiftEvent):
-    print(event.gift.diamond_count)
+    global diamond_count
+    diamond_count += event.gift.diamond_count
+    print(f"Estimated stream earnings: ${diamond_count * 0.005}")
     if event.gift.diamond_count * 2 >= min_coins: # according to google 1 diamond = 2 coins   
-        print(f"{event.user_info.nickname} added to TTS via gift", flush=True)
-        gifters.append(event.user_info.username)
+        print(f"{event.user.nickname} added to TTS via gift", flush=True)
+        gifters.append(event.user.username)
 
 client.add_listener(ConnectEvent, on_connect)
 client.add_listener(CommentEvent, on_comment)
@@ -95,7 +129,8 @@ if __name__ == "__main__":
         try:
             client.run()
             running = False
-        except Exception as e: 
-            print(f"Error: {e}", flush=True)
-            print("Trying to connect to client again in 10 seconds, make sure username is correct. This may take a few minutes", flush=True)
-            time.sleep(10)
+        except Exception as e:
+            #print(f"Error: {e}", flush=True)
+            print("Connection failed, this may take a few tries. Make sure the username is correct, and the user is live", flush=True)
+            time.sleep(5)
+
