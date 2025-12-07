@@ -116,7 +116,7 @@ async def on_gift(event: GiftEvent):
     diamond_count += event.gift.diamond_count
     print(f"Estimated stream earnings: ${diamond_count * 0.005}")
     if event.gift.diamond_count * 2 >= min_coins: # according to google 1 diamond = 2 coins   
-        print(f"{event.user.nickname} added to TTS via gift", flush=True)
+        print(f"{event.user.username} added to TTS via gift", flush=True)
         gifters.append(event.user.username)
 
 client.add_listener(ConnectEvent, on_connect)
