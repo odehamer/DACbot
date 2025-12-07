@@ -7,7 +7,7 @@
 
 streamer_username = "dralphachad" #change to desired streamer
 min_coins = 1 #minimum coins required to trigger TTS
-can_mods_tts = True # True to allow mods to use TTS without gifting, False to restrict to gifting only (make sure to capatalize True/False correctly)
+can_mods_tts = False # True to allow mods to use TTS without gifting, False to restrict to gifting only (make sure to capatalize True/False correctly)
 
 """
 ╔════════════════════════════════════════════════════════════════╗
@@ -55,7 +55,7 @@ async def on_comment(event: CommentEvent):
         if (can_mods_tts and (username == streamer_username or username == "odehamer" or is_mod)):
             print(f"Reading mod {username}'s message: {comment_text}", flush=True)
         else:
-            print(f"Reading {username}'s message ({gifters.count(username)} tts messages remaining): {comment_text}", flush=True)
+            print(f"Reading {username}'s message ({gifters.count(username) - 1} tts messages remaining): {comment_text}", flush=True)
 
         # generate a random accent for variety
         accent = random.choice(tts_accents)
@@ -114,7 +114,7 @@ async def on_comment(event: CommentEvent):
 async def on_gift(event: GiftEvent):
     global diamond_count
     diamond_count += event.gift.diamond_count
-    print(f"Estimated stream earnings: ${diamond_count * 0.005}")
+    print(f"Estimated stream earnings: ${(diamond_count * 0.005):.2f}") # according to google 1 diamond = 0.005 USD
     if event.gift.diamond_count * 2 >= min_coins: # according to google 1 diamond = 2 coins   
         print(f"{event.user.username} added to TTS via gift", flush=True)
         gifters.append(event.user.username)
