@@ -7,7 +7,9 @@
 
 streamer_username = "dralphachad" #change to desired streamer
 min_coins = 1 #minimum coins required to trigger TTS
-can_mods_tts = False # True to allow mods to use TTS without gifting, False to restrict to gifting only (make sure to capatalize True/False correctly)
+can_mods_tts = True # True to allow mods to use TTS without gifting, False to restrict to gifting only (make sure to capatalize True/False correctly)
+tts_on_follow = True # True to enable TTS on follow, False to disable
+random_accents = False # True to use random accents for TTS, False to use default US accent
 
 """
 ╔════════════════════════════════════════════════════════════════╗
@@ -20,7 +22,7 @@ can_mods_tts = False # True to allow mods to use TTS without gifting, False to r
 
 from TikTokLive import TikTokLiveClient
 from TikTokLive.client.logger import LogLevel
-from TikTokLive.events import ConnectEvent, CommentEvent, GiftEvent
+from TikTokLive.events import ConnectEvent, CommentEvent, GiftEvent, FollowEvent    
 from gtts import gTTS
 try:
     from playsound import playsound
@@ -33,6 +35,7 @@ import subprocess
 import random
 
 gifters = []
+followers = [] # stop duplicate follow TTS
 diamond_count = 0  # Initialize diamond counter
 tts_accents = ['com.au', 'co.uk', 'ca', 'us', 'ie', 'co.in', 'co.za', 'com.ng']  # Different accents for variety
 
@@ -119,11 +122,22 @@ async def on_gift(event: GiftEvent):
         print(f"{event.user.username} added to TTS via gift", flush=True)
         gifters.append(event.user.username)
 
+@client.on(FollowEvent)
+async def on_follow(event: FollowEvent):
+    if tts_on_follow and event.user.username not in followers:
+        print(f"{event.user.username} was added to TTS via follow", flush=True)
+        gifters.append(event.user.username)
+        followers.append(event.user.username)
+
+
 client.add_listener(ConnectEvent, on_connect)
 client.add_listener(CommentEvent, on_comment)
 
 if __name__ == "__main__":
     running = True
+
+    if not random_accents:
+        tts_accents = ['us']  # Override to only use US accent
 
     while running: #sometimes takes a few tries to connect
         try:
