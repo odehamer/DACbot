@@ -1,0 +1,23 @@
+apiVersion: 2023-05-01
+location: eastus
+name: dacbot-container
+properties:
+  containers:
+  - name: dacbot
+    properties:
+      image: <YOUR_ACR_NAME>.azurecr.io/dacbot:latest
+      resources:
+        requests:
+          cpu: 1
+          memoryInGb: 1.5
+      environmentVariables:
+      - name: DISCORD_TOKEN
+        secureValue: <YOUR_DISCORD_TOKEN>
+      - name: DISCORD_CHANNEL_ID
+        value: <YOUR_DISCORD_CHANNEL_ID>
+  osType: Linux
+  restartPolicy: Always
+tags:
+  app: dacbot
+  environment: production
+type: Microsoft.ContainerInstance/containerGroups
