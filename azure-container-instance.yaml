@@ -17,11 +17,6 @@ properties:
         value: <YOUR_DISCORD_CHANNEL_ID>
   osType: Linux
   restartPolicy: Always
-  ipAddress:
-    type: Public
-    ports:
-    - protocol: tcp
-      port: 80
 tags:
   app: dacbot
   environment: production

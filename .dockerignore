@@ -43,13 +43,8 @@ wheels/
 *.log
 logs/
 
-# Docker
-Dockerfile
-.dockerignore
-
-# Documentation
+# Documentation (not needed in container)
 *.md
-!DEPLOYMENT.md
 
 # Azure
 azure-container-instance.yaml
